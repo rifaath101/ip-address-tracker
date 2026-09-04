@@ -1,7 +1,11 @@
-import "./App.css"
+import Tracker from "./components/Tracker"
 
 function App() {
-  return <>hey</>
+  return (
+    <>
+      <Tracker />
+    </>
+  )
 }
 
 export default App
