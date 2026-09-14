@@ -30,7 +30,7 @@ function Tracker() {
   const [isLocating, setIsLocating] = useState(true)
   const [ipAddress, setIpAddress] = useState<string>("")
   const [location, setLocation] = useState<Location>()
-  const [domain, setDomain] = useState("")
+  const [input, setInput] = useState("")
   const [isp, setIsp] = useState("")
 
   const MAP_CENTER: L.LatLngExpression =
@@ -62,14 +62,14 @@ function Tracker() {
   }, [])
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setDomain(event.target.value)
+    setInput(event.target.value)
   }
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
     try {
-      const data = await getIpAddress(domain)
+      const data = await getIpAddress(input)
       setIpAddress(data.ip)
       setLocation(data.location)
       setIsp(data.isp)
@@ -95,7 +95,7 @@ function Tracker() {
               placeholder="Search for any IP address or domain"
               className="min-w-0 flex-1 px-6 py-5 text-lg text-gray-950 outline-none placeholder:text-gray-400 md:py-[22px] md:pr-4"
               aria-label="Search for an IP address or domain"
-              value={domain}
+              value={input}
               onChange={handleChange}
             />
             <button
