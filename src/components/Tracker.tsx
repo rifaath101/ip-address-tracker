@@ -1,5 +1,8 @@
 import L from "leaflet"
+import { useEffect, useState } from "react"
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet"
+import type { GeolocationPosition } from "../types/GeoLocation"
+import { getIpAddress } from "../api/getIpAddress"
 import markerIcon from "leaflet/dist/images/marker-icon.png"
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png"
 import markerShadow from "leaflet/dist/images/marker-shadow.png"
@@ -14,9 +17,47 @@ const defaultMarkerIcon = L.icon({
   shadowSize: [41, 41],
 })
 
-const MAP_CENTER: L.LatLngExpression = [40.6892, -73.9857]
+const FALLBACK_CENTER: L.LatLngExpression = [40.6892, -73.9857]
 
 function Tracker() {
+  type Location = {
+    country: string
+    region: string
+    timezone: string
+  }
+
+  const [position, setPosition] = useState<GeolocationPosition | null>(null)
+  const [isLocating, setIsLocating] = useState(true)
+  const [ipAddress, setIpAddress] = useState<string>("")
+  const [location, setLocation] = useState<Location>()
+
+  const MAP_CENTER: L.LatLngExpression =
+    position?.coords.latitude != null && position?.coords.longitude != null
+      ? [position.coords.latitude, position.coords.longitude]
+      : FALLBACK_CENTER
+
+  useEffect(() => {
+    window.navigator.geolocation.getCurrentPosition(
+      (nextPosition) => {
+        setPosition(nextPosition)
+        setIsLocating(false)
+      },
+      (error) => {
+        console.log(error)
+        setIsLocating(false)
+      },
+    )
+
+    getIpAddress()
+      .then((data) => {
+        setIpAddress(data.ip)
+        setLocation(data.location)
+      })
+      .catch((error: unknown) => {
+        console.error(error)
+      })
+  }, [])
+
   return (
     <div className="relative min-h-screen font-rubik">
       <header className="relative z-[1] h-[280px] shrink-0 bg-[url('/images/pattern-bg-mobile.png')] bg-cover bg-center bg-no-repeat md:h-[300px] md:bg-[url('/images/pattern-bg-desktop.png')]">
@@ -51,20 +92,22 @@ function Tracker() {
       </header>
 
       <div className="absolute inset-x-0 top-[280px] bottom-0 z-0 md:top-[300px]">
-        <MapContainer
-          center={MAP_CENTER}
-          zoom={13}
-          scrollWheelZoom={false}
-          className="h-full w-full"
-        >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          <Marker position={MAP_CENTER} icon={defaultMarkerIcon}>
-            <Popup>Brooklyn, NY 10001</Popup>
-          </Marker>
-        </MapContainer>
+        {!isLocating && (
+          <MapContainer
+            center={MAP_CENTER}
+            zoom={13}
+            scrollWheelZoom={false}
+            className="h-full w-full"
+          >
+            <TileLayer
+              attribution="Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS &amp; others"
+              url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}"
+            />
+            <Marker position={MAP_CENTER} icon={defaultMarkerIcon}>
+              <Popup>Your location</Popup>
+            </Marker>
+          </MapContainer>
+        )}
       </div>
 
       <div className="relative z-10 -mt-[72px] px-6 md:-mt-[56px]">
@@ -74,35 +117,30 @@ function Tracker() {
               <dt className="mb-2 text-[10px] font-bold uppercase tracking-[1.5px] text-gray-400 md:mb-3 md:text-xs">
                 IP Address
               </dt>
-              <dd className="text-xl font-medium leading-snug text-gray-950 md:text-[26px]">
-                __
-              </dd>
+              {ipAddress && (
+                <dd className="text-xl font-medium leading-snug text-gray-950 md:text-[26px]">
+                  {ipAddress}
+                </dd>
+              )}
             </div>
 
             <div className="flex w-full flex-col items-center text-center md:flex-1 md:items-start md:px-8 md:text-left md:border-r md:border-black/10">
               <dt className="mb-2 text-[10px] font-bold uppercase tracking-[1.5px] text-gray-400 md:mb-3 md:text-xs">
                 Location
               </dt>
-              <dd className="text-xl font-medium leading-snug text-gray-950 md:text-[26px]">
-                __
-              </dd>
+              {location && (
+                <dd className="text-xl font-medium leading-snug text-gray-950 md:text-[26px]">
+                  {location?.country}, {location?.region}
+                </dd>
+              )}
             </div>
 
-            <div className="flex w-full flex-col items-center text-center md:flex-1 md:items-start md:px-8 md:text-left md:border-r md:border-black/10">
+            <div className="flex w-full flex-col items-center text-center md:flex-1 md:items-start md:px-8 md:text-left ">
               <dt className="mb-2 text-[10px] font-bold uppercase tracking-[1.5px] text-gray-400 md:mb-3 md:text-xs">
                 Timezone
               </dt>
               <dd className="text-xl font-medium leading-snug text-gray-950 md:text-[26px]">
-                __
-              </dd>
-            </div>
-
-            <div className="flex w-full flex-col items-center text-center md:flex-1 md:items-start md:pr-0 md:px-8 md:text-left">
-              <dt className="mb-2 text-[10px] font-bold uppercase tracking-[1.5px] text-gray-400 md:mb-3 md:text-xs">
-                ISP
-              </dt>
-              <dd className="text-xl font-medium leading-snug text-gray-950 md:text-[26px]">
-                __
+                {location?.timezone}
               </dd>
             </div>
           </dl>
