@@ -2,7 +2,7 @@ import L from "leaflet"
 import { useEffect, useState } from "react"
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet"
 import type { GeolocationPosition } from "../types/GeoLocation"
-import { getIpAddress } from "../api/getIpAddress"
+import { getUserIpAddress, getIpAddress } from "../api/getIpAddress"
 import markerIcon from "leaflet/dist/images/marker-icon.png"
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png"
 import markerShadow from "leaflet/dist/images/marker-shadow.png"
@@ -30,6 +30,8 @@ function Tracker() {
   const [isLocating, setIsLocating] = useState(true)
   const [ipAddress, setIpAddress] = useState<string>("")
   const [location, setLocation] = useState<Location>()
+  const [domain, setDomain] = useState("")
+  const [isp, setIsp] = useState("")
 
   const MAP_CENTER: L.LatLngExpression =
     position?.coords.latitude != null && position?.coords.longitude != null
@@ -48,15 +50,33 @@ function Tracker() {
       },
     )
 
-    getIpAddress()
+    getUserIpAddress()
       .then((data) => {
         setIpAddress(data.ip)
         setLocation(data.location)
+        setIsp(data.isp)
       })
       .catch((error: unknown) => {
         console.error(error)
       })
   }, [])
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setDomain(event.target.value)
+  }
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+
+    try {
+      const data = await getIpAddress(domain)
+      setIpAddress(data.ip)
+      setLocation(data.location)
+      setIsp(data.isp)
+    } catch (error: unknown) {
+      console.error(error)
+    }
+  }
 
   return (
     <div className="relative min-h-screen font-rubik">
@@ -68,13 +88,15 @@ function Tracker() {
 
           <form
             className="bg-white flex w-full max-w-[555px] overflow-hidden rounded-[15px] shadow-[0_7px_29px_0_rgba(100,100,111,0.2)]"
-            onSubmit={(e) => e.preventDefault()}
+            onSubmit={handleSubmit}
           >
             <input
               type="text"
               placeholder="Search for any IP address or domain"
               className="min-w-0 flex-1 px-6 py-5 text-lg text-gray-950 outline-none placeholder:text-gray-400 md:py-[22px] md:pr-4"
               aria-label="Search for an IP address or domain"
+              value={domain}
+              onChange={handleChange}
             />
             <button
               type="submit"
@@ -135,13 +157,25 @@ function Tracker() {
               )}
             </div>
 
-            <div className="flex w-full flex-col items-center text-center md:flex-1 md:items-start md:px-8 md:text-left ">
+            <div className="flex w-full flex-col items-center text-center md:flex-1 md:items-start md:px-8 md:text-left md:border-r md:border-black/10">
               <dt className="mb-2 text-[10px] font-bold uppercase tracking-[1.5px] text-gray-400 md:mb-3 md:text-xs">
                 Timezone
               </dt>
               <dd className="text-xl font-medium leading-snug text-gray-950 md:text-[26px]">
                 {location?.timezone}
               </dd>
+            </div>
+
+            <div className="flex w-full flex-col items-center text-center md:flex-1 md:items-start md:px-8 md:text-left ">
+              <dt className="mb-2 text-[10px] font-bold uppercase tracking-[1.5px] text-gray-400 md:mb-3 md:text-xs">
+                ISP
+              </dt>
+
+              {ipAddress && (
+                <dd className="text-xl font-medium leading-snug text-gray-950 md:text-[26px]">
+                  {isp ? isp : "No ISP Available"}
+                </dd>
+              )}
             </div>
           </dl>
         </div>
