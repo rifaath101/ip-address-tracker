@@ -1,7 +1,7 @@
 import L from "leaflet"
 import { useEffect, useState } from "react"
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet"
-import { getIpAddress } from "../api/getIpAddress"
+import { getIpAddress, isValidInput } from "../api/getIpAddress"
 import markerIcon from "leaflet/dist/images/marker-icon.png"
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png"
 import markerShadow from "leaflet/dist/images/marker-shadow.png"
@@ -27,9 +27,10 @@ function Tracker() {
 
   const [isLocating, setIsLocating] = useState(true)
   const [position, setPosition] = useState<L.LatLngExpression>(FALLBACK_CENTER)
-  const [ipAddress, setIpAddress] = useState<string>("")
+  const [ipAddress, setIpAddress] = useState("")
   const [location, setLocation] = useState<Location>()
   const [input, setInput] = useState("")
+  const [inputError, setInputError] = useState(false)
   const [isp, setIsp] = useState("")
 
   useEffect(() => {
@@ -47,11 +48,19 @@ function Tracker() {
   }, [])
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setInputError(false)
     setInput(event.target.value)
   }
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+
+    if (!isValidInput(input)) {
+      setInput("Invalid IP Address or Domain name")
+      setInputError(true)
+      return
+    }
+
     setIsLocating(true)
 
     try {
@@ -81,7 +90,9 @@ function Tracker() {
             <input
               type="text"
               placeholder="Search for any IP address or domain"
-              className="min-w-0 flex-1 px-6 py-5 text-lg text-gray-950 outline-none placeholder:text-gray-400 md:py-[22px] md:pr-4"
+              className={`min-w-0 flex-1 px-6 py-5 text-lg outline-none placeholder:text-gray-400 md:py-[22px] md:pr-4 ${
+                inputError ? "text-red-600" : "text-gray-950"
+              }`}
               aria-label="Search for an IP address or domain"
               value={input}
               onChange={handleChange}

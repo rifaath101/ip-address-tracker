@@ -35,6 +35,10 @@ function getInputType(input: string): "ipv4" | "ipv6" | "domain" | "invalid" {
   return "invalid"
 }
 
+function isValidInput(input: string): boolean {
+  return getInputType(input) !== "invalid"
+}
+
 async function getIpAddress(value?: string): Promise<IpLookupResponse> {
   const params = new URLSearchParams({
     apiKey: "at_PJ5c46cqNLSqu7qjhafLMWt9nOy5D",
@@ -67,4 +71,4 @@ async function getIpAddress(value?: string): Promise<IpLookupResponse> {
   return (await response.json()) as IpLookupResponse
 }
 
-export { getIpAddress }
+export { getIpAddress, isValidInput }
