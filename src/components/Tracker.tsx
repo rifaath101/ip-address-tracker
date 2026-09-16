@@ -113,7 +113,7 @@ function Tracker() {
       </header>
 
       <div className="absolute inset-x-0 top-[280px] bottom-0 z-0 md:top-[300px]">
-        {!isLocating && (
+        {!isLocating ? (
           <MapContainer
             center={position}
             zoom={13}
@@ -128,6 +128,32 @@ function Tracker() {
               <Popup>Your location</Popup>
             </Marker>
           </MapContainer>
+        ) : (
+          <div className="flex items-center justify-center gap-3 py-72">
+            <svg
+              className="h-5 w-5 animate-spin text-gray-400"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+              />
+            </svg>
+            <span className="text-lg font-medium text-gray-400">
+              Loading...
+            </span>
+          </div>
         )}
       </div>
 
