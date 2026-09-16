@@ -1,8 +1,7 @@
 import L from "leaflet"
 import { useEffect, useState } from "react"
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet"
-import type { GeolocationPosition } from "../types/GeoLocation"
-import { getUserIpAddress, getIpAddress } from "../api/getIpAddress"
+import { getIpAddress } from "../api/getIpAddress"
 import markerIcon from "leaflet/dist/images/marker-icon.png"
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png"
 import markerShadow from "leaflet/dist/images/marker-shadow.png"
@@ -26,32 +25,18 @@ function Tracker() {
     timezone: string
   }
 
-  const [position, setPosition] = useState<GeolocationPosition | null>(null)
   const [isLocating, setIsLocating] = useState(true)
+  const [position, setPosition] = useState<L.LatLngExpression>(FALLBACK_CENTER)
   const [ipAddress, setIpAddress] = useState<string>("")
   const [location, setLocation] = useState<Location>()
   const [input, setInput] = useState("")
   const [isp, setIsp] = useState("")
 
-  const MAP_CENTER: L.LatLngExpression =
-    position?.coords.latitude != null && position?.coords.longitude != null
-      ? [position.coords.latitude, position.coords.longitude]
-      : FALLBACK_CENTER
-
   useEffect(() => {
-    window.navigator.geolocation.getCurrentPosition(
-      (nextPosition) => {
-        setPosition(nextPosition)
-        setIsLocating(false)
-      },
-      (error) => {
-        console.log(error)
-        setIsLocating(false)
-      },
-    )
-
-    getUserIpAddress()
+    getIpAddress()
       .then((data) => {
+        setPosition([data.location.lat, data.location.lng])
+        setIsLocating(false)
         setIpAddress(data.ip)
         setLocation(data.location)
         setIsp(data.isp)
@@ -67,9 +52,12 @@ function Tracker() {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    setIsLocating(true)
 
     try {
       const data = await getIpAddress(input)
+      setPosition([data.location.lat, data.location.lng])
+      setIsLocating(false)
       setIpAddress(data.ip)
       setLocation(data.location)
       setIsp(data.isp)
@@ -116,7 +104,7 @@ function Tracker() {
       <div className="absolute inset-x-0 top-[280px] bottom-0 z-0 md:top-[300px]">
         {!isLocating && (
           <MapContainer
-            center={MAP_CENTER}
+            center={position}
             zoom={13}
             scrollWheelZoom={false}
             className="h-full w-full"
@@ -125,7 +113,7 @@ function Tracker() {
               attribution="Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS &amp; others"
               url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}"
             />
-            <Marker position={MAP_CENTER} icon={defaultMarkerIcon}>
+            <Marker position={position} icon={defaultMarkerIcon}>
               <Popup>Your location</Popup>
             </Marker>
           </MapContainer>

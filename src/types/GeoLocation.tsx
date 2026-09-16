@@ -1,24 +1,14 @@
-type GeolocationPosition = {
-  coords: GeolocationCoordinates
-  timestamp: EpochTimeStamp // number (ms since epoch)
-}
-
-type GeolocationCoordinates = {
-  readonly accuracy: number
-  readonly altitude: number | null
-  readonly altitudeAccuracy: number | null
-  readonly heading: number | null
-  readonly latitude: number
-  readonly longitude: number
-  readonly speed: number | null
-}
-
 type IpLookupResponse = {
   ip: string
   location: {
     country: string
     region: string
+    city: string
+    lat: number
+    lng: number
+    postalCode: string
     timezone: string
+    geonameId: number
   }
   domains: string[]
   as: {
@@ -31,4 +21,4 @@ type IpLookupResponse = {
   isp: string
 }
 
-export type { GeolocationPosition, IpLookupResponse }
+export type { IpLookupResponse }

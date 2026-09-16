@@ -1,17 +1,5 @@
 import type { IpLookupResponse } from "../types/GeoLocation"
 
-async function getUserIpAddress(): Promise<IpLookupResponse> {
-  const response = await fetch(
-    "https://geo.ipify.org/api/v2/country?apiKey=at_fEbbCasdjRiDBFSvDcji3Vos4NaiF",
-  )
-
-  if (!response.ok) {
-    throw new Error(`HTTP error! Status: ${response.status}`)
-  }
-
-  return (await response.json()) as IpLookupResponse
-}
-
 function getInputType(input: string): "ipv4" | "ipv6" | "domain" | "invalid" {
   const trimmed = input.trim()
 
@@ -47,22 +35,29 @@ function getInputType(input: string): "ipv4" | "ipv6" | "domain" | "invalid" {
   return "invalid"
 }
 
-async function getIpAddress(value: string): Promise<IpLookupResponse> {
-  const valueType = getInputType(value)
+async function getIpAddress(value?: string): Promise<IpLookupResponse> {
+  const params = new URLSearchParams({
+    apiKey: "at_PJ5c46cqNLSqu7qjhafLMWt9nOy5D",
+  })
 
-  const param =
-    valueType === "ipv4" || valueType === "ipv6"
-      ? `ipAddress=${value}`
-      : valueType === "domain"
-        ? `domain=${new URL(value.startsWith("http") ? value : `https://${value}`).hostname}`
-        : null
+  if (value !== undefined) {
+    const valueType = getInputType(value)
 
-  if (param === null) {
-    throw new Error(`Invalid input: ${value}`)
+    if (valueType === "ipv4" || valueType === "ipv6") {
+      params.set("ipAddress", value)
+    } else if (valueType === "domain") {
+      const hasScheme = value.startsWith("http")
+      params.set(
+        "domain",
+        new URL(hasScheme ? value : `https://${value}`).hostname,
+      )
+    } else {
+      throw new Error(`Invalid input: ${value}`)
+    }
   }
 
   const response = await fetch(
-    `https://geo.ipify.org/api/v2/country?apiKey=at_fEbbCasdjRiDBFSvDcji3Vos4NaiF&${param}`,
+    `https://geo.ipify.org/api/v2/country,city?${params.toString()}`,
   )
 
   if (!response.ok) {
@@ -72,4 +67,4 @@ async function getIpAddress(value: string): Promise<IpLookupResponse> {
   return (await response.json()) as IpLookupResponse
 }
 
-export { getUserIpAddress, getIpAddress }
+export { getIpAddress }
