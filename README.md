@@ -1,75 +1,63 @@
-# React + TypeScript + Vite
+# IP Address Tracker
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A responsive web app that shows your own IP address, location, timezone, and ISP on load, and lets you look up that same information for any other IP address or domain — plotted on an interactive map.
 
-Currently, two official plugins are available:
+This is a solution to a [Frontend Mentor](https://www.frontendmentor.io/) challenge.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Overview
 
-## React Compiler
+### Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- On load, automatically detects and displays the user's own:
+  - IP address
+  - Location (country, region)
+  - Timezone
+  - ISP
+- Search for any IP address or domain to get the same info
+- Client-side input validation — invalid input shows an error message instead of firing a request
+- Interactive map (via Leaflet) that re-centers on the searched location
+- Fully responsive layout
 
-## Expanding the ESLint configuration
+### Built with
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- [React](https://react.dev/)
+- [TypeScript](https://www.typescriptlang.org/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [Leaflet](https://leafletjs.com/) / [React Leaflet](https://react-leaflet.js.org/)
+- [ipify Geolocation API](https://geo.ipify.org/)
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Project structure
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+The project is intentionally minimal — a single-page app with no routing, so each folder holds just one file:
 
 ```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+src/
+├── api/
+│   └── getIpAddress.ts       # Single GET request, used for both the initial
+│                              # lookup and searched IP/domain lookups
+├── components/
+│   └── Tracker.tsx            # The only page — search bar + info panel + map
+└── types/
+    └── GeoLocation.ts         # Type signature for the API response
 ```
+
+## How it works
+
+1. **On page load**, `getIpAddress()` is called with no argument, which hits the ipify API without an `ipAddress` or `domain` param — resolving to the caller's own IP. The result populates the IP, location, timezone, and ISP fields, and centers the map on that location.
+2. **On search**, the entered value is validated (checked against IPv4, IPv6, and domain patterns). If invalid, an error message is shown and no request is made.
+3. If valid, `getIpAddress(value)` is called with the input, which builds the correct query param (`ipAddress` or `domain`) depending on the detected input type, fetches the data, and updates the UI and map accordingly.
+
+## Running locally
+
+```bash
+git clone <repo-url>
+cd <project-folder>
+npm install
+npm run dev
+```
+
+You'll need an API key from [ipify](https://geo.ipify.org/) — add it to a `.env` file and reference it in `api/getIpAddress.ts` rather than hardcoding it.
+
+## Acknowledgments
+
+Challenge by [Frontend Mentor](https://www.frontendmentor.io/challenges/ip-address-tracker-I8-0yYAH2).
